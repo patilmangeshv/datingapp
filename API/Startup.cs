@@ -11,9 +11,15 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
-
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using Microsoft.EntityFrameworkCore;
+
 using API.Data;
+using API.Interfaces;
+using API.Services;
+using API.Extensions;
 
 namespace API
 {
@@ -28,14 +34,13 @@ namespace API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            // Add database connection string
-            services.AddDbContext<DataContext>(options =>
-            {
-                options.UseSqlite(_config.GetConnectionString("DefaultConnection"));
-            });
 
+            services.AddApplicationServices(_config);
+            
             services.AddCors();
 
+            services.AddIdentityServices(_config);
+            
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
@@ -58,7 +63,9 @@ namespace API
             app.UseRouting();
 
             // Apply CORS
-            app.UseCors( policy => policy.AllowAnyHeader().AllowAnyMethod().WithOrigins("https://localhost:4200"));
+            app.UseCors(policy => policy.AllowAnyHeader().AllowAnyMethod().WithOrigins("https://localhost:4200"));
+
+            app.UseAuthentication();
 
             app.UseAuthorization();
 
